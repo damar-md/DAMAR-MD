@@ -8,14 +8,14 @@ global.ButtonV2 = ButtonV2;
 global.Carousel = Carousel;
 global.AIRich = AIRich;
 
-global.pairingNumber = 212680697262;
+global.pairingNumber = 212633226499;
 global.owner = [
-  ['212680697262', 'noureddine Ouafy', true],
+  ['212633226499', 'DAMAR-MD', true],
   ['', 'Owner 2', true],
 ];
 
 global.namebot = 'gaff ai';
-global.author = 'Noureddine ouafy';
+global.author = 'DAMAR-MD';
 global.source = 'https://chat.whatsapp.com/Hp3R0WWD5G8Li9HKBU6fn3';
 
 global.wait = 'Loading... | جاري الانتظار';

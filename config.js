@@ -31,8 +31,6 @@ global.stickpack = 'Created By';
 global.stickauth = namebot;
 
 global.multiplier = 38; // The higher, The harder levelup
-
-global.audioIntro = 'https://pdftolink.io/file/r2_dXNlcnMvZ3Vlc3QvZjhiNWYyMDItODU3YS00YTRmLTg2OGYtYTY4ZjAyOGI5ZmE0Lm00YQ' 
 global.audioMenu = 'https://pdftolink.io/file/r2_dXNlcnMvZ3Vlc3QvZjhiNWYyMDItODU3YS00YTRmLTg2OGYtYTY4ZjAyOGI5Lmm00YQ'
 
 YQ*============== EMOJI ==============*/

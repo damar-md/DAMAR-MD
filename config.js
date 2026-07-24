@@ -32,7 +32,7 @@ global.stickauth = namebot;
 
 global.multiplier = 38; // The higher, The harder levelup
 
-global.myImage = 'https://cdn.phototourl.com/free/2026-07-24-dc031ed8-61bf-4164-b177-9874847bab4f.jpg'
+global.myImage = 'https://cdn.phototourl.com/free/2026-07-24-dc031ed8-61bf-4164-b177-9874847bab4f.jpg '; 
 
 /*============== EMOJI ==============*/
 global.rpg = {

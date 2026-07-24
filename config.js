@@ -32,7 +32,7 @@ global.stickauth = namebot;
 
 global.multiplier = 38; // The higher, The harder levelup
 
-YQ*============== EMOJI ==============*/
+/*============== EMOJI ==============*/
 global.rpg = {
 	emoticon(string) {
 		string = string.toLowerCase();

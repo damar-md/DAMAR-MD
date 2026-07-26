@@ -7,7 +7,7 @@ import yts from "yt-search"
 
 const handler = async (m, { text, conn }) => {
     try {
-        if (!text) return m.reply("⚠️ What music do you want to play?")
+        if (!text) return m.reply("⚠️ *ما هي الموسيقى التي تريد تشغيلها؟*")
 
         const { all } = await yts(text)
         const metadata = all[0]

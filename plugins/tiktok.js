@@ -1,109 +1,96 @@
-let handler = async (m, { text, usedPrefix, command }) => {
-	try {
-		const input = m.quoted ? m.quoted.text : text;
-		const regex = /(https:\/\/(vt|vm)\.tiktok\.com\/[^\s]+|https:\/\/www\.tiktok\.com\/@[\w.-]+\/video\/\d+)/;
+import fetch from 'node-fetch'
 
-		const parseUrl = input.match(regex)?.[0];
-		if (parseUrl) {
-			m.react('🔁');
-			let res = await (await fetch(`https://www.tikwm.com/api/?url=${parseUrl}&hd=1`)).json();
-			if (!res || !res.data) 'Failed to retrieve data from TikTok.';
+let handler = async (m, { conn, args, usedPrefix, command }) => {
+    const startDeco = `* ━ ╼╃ ⌬〔﷽〕⌬ ╄╾ ━ *`;
+    const endDeco = `* ━ ╼╃ ⌬〔 DAMAR-MD 〕⌬ ╄╾ ━ *`;
+    const myCredit = `*🫧┊اسـم الـبـوت:* *DAMAR-BOT*`;
 
-			let data = res.data;
-			await m.reply(`# *TIKTOK DOWNLOADER*
+    if (!args[0]) return m.reply(`${startDeco}
+> *〔 جـيـتـهـاب┊ ˼‏ 📦˹ ↶〕* *🌊 ───━ •﹝📌﹞• ━─── *DAMAR-MD* ──¤﹝بـحـث وتـحـمـيـل ↶﹞*
+> *〔 ⚠️ 〕 الاسـتـخـدام:* ${usedPrefix}${command} اسم المستودع
+> *〔 💡 〕 الـمـثـال:* ${usedPrefix}${command} gpt
+> *〔 ⬇️ 〕 تـحـمـيـل مـبـاشـر:* ${usedPrefix}${command} تحميل الرابط
 
-> *Title*: ${data.title}
-> *Region*: ${data.region}
-> *Duration*: ${formatDuration(data.duration)}
-> *Views*: ${formatNumber(data.play_count)}
-> *Comments*: ${formatNumber(data.comment_count)}
-> *Shares*: ${formatNumber(data.share_count)}
-> *Uploader*: ${data.author.nickname || data.author.unique_id}
+*🧣 ──¤﹝مـعـلـومـات الـنـظـام↶﹞*
+${myCredit} *🐣 ───━ •﹝📌﹞• ━───*
+${endDeco}`);
 
-Sending.....`);
+    // إذا كان تحميل مباشر
+    if (args[0] === 'تحميل' || args[0] === 'dl') {
+        if (!args[1]) return m.reply(`${startDeco}\n> *〔 خـطـأ┊ ˼‏ ❌˹ ↶〕*\n> *رابط غير صالح*\n${endDeco}`);
+        let url = args[1];
+        await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
+        try {
+            let name = args[2] || url.split('/').pop() || 'file';
+            let res = await fetch(url);
+            let data = await res.buffer();
+            await conn.sendMessage(m.chat, {
+                document: data,
+                fileName: name,
+                mimetype: 'application/octet-stream',
+                caption: `${startDeco}
+> *〔 تـم الـتـحـمـيـل┊ ˼‏ ✅˹ ↶〕* *🌊 ───━ •﹝📌﹞• ━─── *DAMAR-MD* ──¤﹝جـيـتـهـاب ↶﹞*
+> *〔 ✅ 〕 الـحـالـة:* تم إرسال الملف بنجاح
 
-			if (data.images && data.images.length > 0) {
-				if (data.images.length < 2) {
-					for (let img of data.images) {
-						await conn.sendFile(m.chat, img, '', '', m);
-					}
-				} else {
-					let media = data.images.map((img) => ({
-						image: { url: img },
-					}));
-					await conn.sendAlbumMessage(m.chat, media, { quoted: m });
-				}
-			} else {
-				await conn.sendFile(m.chat, data.play, '', '', m);
-			}
+*🧣 ──¤﹝مـعـلـومـات الـنـظـام↶﹞*
+${myCredit} *🐣 ───━ •﹝📌﹞• ━───*
+${endDeco}`,
+                footer: '© Powered By DAMAR-MD 🇲🇦'
+            }, { quoted: m });
+            await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+        } catch (e) {
+            await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+            m.reply(`${startDeco}\n> *〔 خـطـأ┊ ˼‏ ❌˹ ↶〕*\n> *فشل في تحميل الملف*\n${endDeco}`);
+        }
+        return;
+    }
 
-			if (data.music_info.play) {
-				await conn.sendMessage(
-					m.chat,
-					{
-						audio: { url: data.music_info.play },
-						mimetype: 'audio/mpeg',
-						fileName: `${data.title}.mp3`,
-					},
-					{ quoted: m }
-				);
-			} else {
-				m.reply('Music not found, only the media will be sent.');
-			}
-		} else if (input) {
-			let search = await (await fetch(`https://www.tikwm.com/api/feed/search?keywords=${input}&count=1&cursor=0&web=1&hd=1`)).json();
-			let video = search?.data?.videos[0];
-			if (!video) throw `Video not found for search "${input}".`;
+    let query = args.join(' ');
+    await conn.sendMessage(m.chat, { react: { text: '🔍', key: m.key } });
 
-			let caption = `# *TIKTOK PLAYER*
+    let res = await fetch(`https://api.github.com/search/repositories?q=${query}`);
+    let json = await res.json();
 
-> *Title:* ${video.title}
-> *Region:* ${video.region}
-> *Duration:* ${formatDuration(video.duration)}
-> *Views:* ${formatNumber(video.play_count)}
-> *Comments:* ${formatNumber(video.comment_count)}
-> *Shares:* ${formatNumber(video.share_count)}
-> *Uploader:* ${video.author.nickname || video.author.unique_id}
-`.trim();
+    if (!json.items || json.items.length === 0) return m.reply(`${startDeco}\n> *〔 نـتـيـجـة┊ ˼‏ ❌˹ ↶〕*\n> *لم يتم العثور على نتائج*\n${endDeco}`);
 
-			conn.sendFile(m.chat, 'https://www.tikwm.com' + video.play, '', caption, m);
-		} else {
-			let cmd = usedPrefix + command;
-			m.reply(`*TIKTOK DOWNLOADER*
-> _*• Search:*_ \`${cmd} [query]\`
-> _*• Download:*_ \`${cmd} [link]\`
+    let rows = json.items.slice(0, 10).map((repo, i) => ({
+        header: `${repo.full_name}`,
+        title: `⭐ ${repo.stargazers_count} | 🍴 ${repo.forks_count}`,
+        description: `📥 اضغط للتحميل`,
+        id: `${usedPrefix}${command} تحميل ${repo.html_url}/archive/refs/heads/master.zip ${repo.name}.zip`
+    }));
 
-*E X A M P L E:*
-> *• ${cmd}* cosplayer
-> *• ${cmd}* \`https://vt.tiktok.com/xxxxx\``);
-		}
-	} catch (err) {
-		console.error(err);
-		return m.reply('An error occurred while processing the request');
-	}
+    const sections = [{
+        title: "📦 نتائج البحث",
+        rows: rows
+    }];
+
+    await conn.sendMessage(m.chat, {
+        text: `${startDeco}
+> *〔 نـتـائـج الـبـحـث┊ ˼‏ 🔍˹ ↶〕* *🌊 ───━ •﹝📌﹞• ━─── *DAMAR-MD* ──¤﹝جـيـتـهـاب ↶﹞*
+> *〔 🔍 〕 الـبـحـث:* ${query}
+> *〔 📊 〕 الـنـتـائـج:* تم العثور على ${json.total_count} نتيجة
+> *〔 📌 〕 الـمـلاحـظـة:* اختر من القائمة للتحميل
+
+*🧣 ──¤﹝مـعـلـومـات الـنـظـام↶﹞*
+${myCredit} *🐣 ───━ •﹝📌﹞• ━───*
+${endDeco}`,
+        footer: '© Powered By DAMAR-MD 🇲🇦',
+        interactiveButtons: [{
+            name: "single_select",
+            buttonParamsJson: JSON.stringify({
+                title: "📋 نتائج البحث 📋",
+                sections: sections
+            })
+        }]
+    }, { quoted: m });
+
+    await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 };
 
-handler.help = ['tiktok'];
-handler.tags = ['downloader'];
-handler.command = /^(tiktok)$/i;
-handler.limit = false;
+handler.help = ['github <بحث>'];
+handler.tags = ['🔧 الادوات 🔧'];
+handler.command = /^(جيتهاب|github|git)$/i;
+handler.limit = true;
 
 export default handler;
-
-function formatNumber(number) {
-	return number.toLocaleString();
-}
-
-function formatDuration(seconds) {
-	if (!seconds) return '00:00';
-
-	const m = Math.floor(seconds / 60)
-		.toString()
-		.padStart(2, '0');
-
-	const s = Math.floor(seconds % 60)
-		.toString()
-		.padStart(2, '0');
-
-	return `${m}:${s}`;
-}

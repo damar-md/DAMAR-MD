@@ -1,85 +1,100 @@
-// plugin by noureddine ouafy
-// scrape by NBS30 Daffa
-import axios from 'axios';
+import { exec } from 'child_process'
+import fs from 'fs'
+import path from 'path'
 
-// The main handler function that will be triggered by commands.
-let handler = async (m, { conn, text, usedPrefix, command }) => {
+export default {
+  name: 'اغنية',
+  aliases: [],
+  category: 'تحميل',
+  description: 'تحميل أغنية من يوتيوب',
+  category: 'ق10',
 
-  // The core logic for interacting with the image generation API.
-  const artly = {
-    api: {
-      base: 'https://getimg-x4mrsuupda-uc.a.run.app',
-      endpoint: {
-        generate: '/api-premium',
+  execute: async (sock, m, args) => {
+    try {
+      const jid = m.key.remoteJid
+
+      if (!args || args.length === 0) {
+        return sock.sendMessage(jid, {
+          text: `> ━ ╼╃ ⌬〔 ~𝐀𝐋𝐏𝐇𝐀 𝐗 𝐁𝐎𝐓~ 〕⌬ ╄╾ ━
+
+> 🎵 اكتب اسم الأغنية
+> مثال:
+> .اغنية despacito`
+        }, { quoted: m })
       }
-    },
-    headers: {
-      'user-agent': 'NB Android/1.0.0',
-      'accept-encoding': 'gzip',
-      'content-type': 'application/x-www-form-urlencoded'
-    },
 
-    generate: async (prompt = '', width = 512, height = 512, steps = 25) => {
-      if (!prompt.trim()) {
-        return {
-          success: false,
-          code: 400,
-          result: {
-            error: 'Prompt cannot be empty. 🗿'
-          }
-        };
-      }
-      try {
-        const payload = new URLSearchParams();
-        payload.append('prompt', prompt);
-        payload.append('width', width.toString());
-        payload.append('height', height.toString());
-        payload.append('num_inference_steps', steps.toString());
+      const query = args.join(' ').trim()
 
-        const response = await axios.post(`${artly.api.base}${artly.api.endpoint.generate}`, payload, {
-          headers: artly.headers
-        });
-        const data = response.data;
-        return {
-          success: true,
-          code: 200,
-          result: {
-            seed: data.seed,
-            cost: data.cost,
-            url: data.url
-          }
-        };
-      } catch (err) {
-        return {
-          success: false,
-          code: err.response?.status || 500,
-          result: {
-            error: 'An error occurred during generation. 🗿'
-          }
-        };
-      }
-    },
-  };
+      const tempDir = './temp'
+      if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true })
 
-  // Check the command used.
-  if (command === 'artly') {
-    if (!text) throw `Usage: ${usedPrefix + command} <prompt>\nExample: ${usedPrefix + command} a cat wearing a hat`;
-    
-    await m.reply('Generating your image, please wait...');
-    
-    const result = await artly.generate(text);
+      const audioPath = path.join(tempDir, `song_${Date.now()}.mp3`)
 
-    if (result.success) {
-      await conn.sendFile(m.chat, result.result.url, 'artly.png', `*Seed:* ${result.result.seed}\n*Cost:* ${result.result.cost}`, m);
-    } else {
-      await m.reply(`Error: ${result.result.error} (Code: ${result.code})`);
+      // 🎶 تفاعل
+      await sock.sendMessage(jid, {
+        react: { text: '🎶', key: m.key }
+      })
+
+      const cmd = `yt-dlp -x --audio-format mp3 "ytsearch1:${query}" -o "${audioPath}"`
+
+      exec(cmd, async (err) => {
+        if (err || !fs.existsSync(audioPath)) {
+          console.log("❌ Download error:", err?.message)
+
+          await sock.sendMessage(jid, {
+            react: { text: '❌', key: m.key }
+          })
+
+          return sock.sendMessage(jid, {
+            text: `> ━ ╼╃ ⌬〔 ~𝐀𝐋𝐏𝐇𝐀 𝐗 𝐁𝐎𝐓~ 〕⌬ ╄╾ ━
+
+> ❌ فشل تحميل:
+> 🎵 ${query}`
+          }, { quoted: m })
+        }
+
+        await sock.sendMessage(jid, {
+          react: { text: '✅', key: m.key }
+        })
+
+        const caption = `> ━ ╼╃ ⌬〔 ~𝐀𝐋𝐏𝐇𝐀 𝐗 𝐁𝐎𝐓~ 〕⌬ ╄╾ ━
+
+> 🎶 تم تحميل الأغنية بنجاح
+> 📝 الاسم: ${query}
+> 📥 المصدر: YouTube
+> 🤖 البوت: ALPHA X`
+
+        try {
+          const audio = fs.readFileSync(audioPath)
+
+          await sock.sendMessage(jid, {
+            audio: audio,
+            mimetype: 'audio/mpeg',
+            caption
+          }, { quoted: m })
+
+        } catch (sendErr) {
+          console.log("❌ Send error:", sendErr)
+
+          await sock.sendMessage(jid, {
+            text: `❌ حدث خطأ أثناء إرسال الأغنية`
+          }, { quoted: m })
+        }
+
+        // 🧹 حذف الملف
+        try {
+          if (fs.existsSync(audioPath)) fs.unlinkSync(audioPath)
+        } catch {}
+      })
+
+    } catch (e) {
+      console.log("❌ Song Command Error:", e)
+
+      await sock.sendMessage(m.key.remoteJid, {
+        text: `> ━ ╼╃ ⌬〔 ~𝐀𝐋𝐏𝐇𝐀 𝐗 𝐁𝐎𝐓~ 〕⌬ ╄╾ ━
+
+> ⚠️ حدث خطأ غير متوقع`
+      }, { quoted: m })
     }
   }
-};
-
-
-handler.help = ['artly'];
-handler.command = ['artly'];
-handler.tags = ['ai'];
-handler.limit = false; 
-export default handler;
+}

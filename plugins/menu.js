@@ -334,7 +334,7 @@ const handler = async (m, { conn, usedPrefix: _p, command, isOwner, args }) => {
                 await conn.sendButton(
                         m.chat,
                         {
-                                image: { url: 'https://cdn.phototourl.com/free/2026-07-26-5c9de8b2-64fe-4890-b63c-2860da3cb81e.jpg' },
+                                image: { url: 'https://cdn.phototourl.com/free/2026-07-26-838589b9-3c52-4c21-99fd-1e7109054e63.png' },
                                 caption: text.replace(
                                         new RegExp(`%(${Object.keys(replace).join('|')})`, 'g'),
                                         (_, key) => replace[key]

@@ -1,74 +1,100 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio'
+//translate and modified by noureddine
+//plugin by Izuku-mi
 
-// --- Scraper Logic for TikTok ---
-const SITE_URL = 'https://instatiktok.com/';
+import axios from "axios"
+import crypto from "crypto"
+import yts from "yt-search"
 
-async function tiktokDownloader(inputUrl) {
-  if (!inputUrl) throw new Error('يرجى تقديم رابط صالح.');
+const handler = async (m, { text, conn }) => {
+    try {
+        if (!text) return m.reply("⚠️ What music do you want to play?")
 
-  const form = new URLSearchParams();
-  form.append('url', inputUrl);
-  form.append('platform', 'tiktok');
-  form.append('siteurl', SITE_URL);
+        const { all } = await yts(text)
+        const metadata = all[0]
+        if (!metadata) return m.reply("❌ Music not found")
 
-  try {
-    const { data } = await axios.post(`${SITE_URL}api`, form.toString(), {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'Origin': SITE_URL,
-        'Referer': SITE_URL,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
+        const url = metadata.url
 
-    if (data.status !== 'success' || !data.html) {
-      throw new Error('فشل في استرداد البيانات. قد يكون الرابط خاصًا أو غير صالح.');
+        const client = axios.create({
+            headers: {
+                "content-type": "application/json",
+                "origin": "https://yt.savetube.me",
+                "user-agent": "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36"
+            }
+        })
+
+        // Extract video ID
+        const idMatch = url.match(/(?:youtu\.be\/|v=)([a-zA-Z0-9_-]{11})/)
+        if (!idMatch) throw new Error("Invalid YouTube URL")
+
+        const videoId = idMatch[1]
+
+        // Get CDN
+        const { data: cdnRes } = await client.get("https://media.savetube.vip/api/random-cdn")
+        const cdn = cdnRes.cdn
+
+        // Get encrypted info
+        const { data: infoRes } = await client.post(`https://${cdn}/v2/info`, {
+            url: `https://www.youtube.com/watch?v=${videoId}`
+        })
+
+        // Decrypt data
+        const encrypted = Buffer.from(infoRes.data, "base64")
+        const key = Buffer.from("C5D58EF67A7584E4A29F6C35BBC4EB12", "hex")
+        const iv = encrypted.subarray(0, 16)
+
+        const decipher = crypto.createDecipheriv("aes-128-cbc", key, iv)
+        const decrypted = Buffer.concat([
+            decipher.update(encrypted.subarray(16)),
+            decipher.final()
+        ])
+
+        const meta = JSON.parse(decrypted.toString())
+
+        // Request download
+        const { data: dlRes } = await client.post(`https://${cdn}/download`, {
+            id: videoId,
+            downloadType: "audio",
+            quality: "128",
+            key: meta.key
+        })
+
+        const download = dlRes?.data?.downloadUrl
+        if (!download) throw new Error("Failed to get download link")
+
+        const caption = `🎵 Play Music:
+• Title: ${metadata.title || ""}
+• Artist: ${metadata.author?.name || ""}
+• URL: ${metadata.url || ""}
+• Duration: ${metadata.timestamp || ""}
+
+(+ ) Source: OmegaTech`
+
+        await conn.sendMessage(
+            m.chat,
+            {
+                image: { url: meta.thumbnail },
+                caption
+            },
+            { quoted: m }
+        )
+
+        await conn.sendMessage(
+            m.chat,
+            {
+                audio: { url: download },
+                mimetype: "audio/mpeg"
+            },
+            { quoted: m }
+        )
+
+    } catch (e) {
+        console.error(e)
+        m.reply("❌ Error occurred. Maybe too many requests.")
     }
-
-    const $ = cheerio.load(data.html);
-    const links = [];
-    $('a.btn[href^="http"]').each((_, el) => {
-      const link = $(el).attr('href');
-      if (link && !links.includes(link)) {
-        links.push(link);
-      }
-    });
-
-    if (links.length === 0) throw new Error('لم يتم العثور على روابط قابلة للتنزيل.');
-
-    // Prefer the link without a watermark if available
-    const downloadUrl = links.find(link => /hdplay|nowm/i.test(link)) || links[0];
-
-    return {
-      status: true,
-      download: downloadUrl
-    };
-  } catch (error) {
-    throw new Error(error.message || 'حدث خطأ غير معروف أثناء جلب البيانات.');
-  }
 }
 
-// --- Handler Code ---
-let handler = async (m, { conn, text, usedPrefix, command }) => {
-  if (!text) throw `*الاستخدام:* ${usedPrefix}${command} <رابط تيك توك>\n\n*مثال:* ${usedPrefix}${command} https://www.tiktok.com/@user/video/123...`;
-
-  try {
-    await m.reply('⏳ جاري معالجة طلبك... يرجى الانتظار.');
-
-    const result = await tiktokDownloader(text);
-    
-    await conn.sendFile(m.chat, result.download, '', `✨ تم التنزيل من تيك توك`, m);
-
-  } catch (e) {
-    await m.reply(`❌ خطأ: ${e.message}`);
-  }
-};
-
-handler.help = ['ttdl'];
-handler.tags = ['downloader'];
-handler.command = ['ttdl'];
-handler.limit = false;
-handler.premium = false;
-export default handler;
+handler.command = ["music"]
+handler.help = ["music"]
+handler.tags = ["downloader"]
+export default handler

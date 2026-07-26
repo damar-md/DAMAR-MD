@@ -1,100 +1,79 @@
-import { exec } from 'child_process'
-import fs from 'fs'
-import path from 'path'
+import axios from 'axios';
 
-export default {
-  name: 'اغنية',
-  aliases: [],
-  category: 'تحميل',
-  description: 'تحميل أغنية من يوتيوب',
-  category: 'ق10',
+let handler = async (m, { conn, text, command }) => {
+    
+    // Check if user provided an app name
+    // 'text' is the query (e.g., "Instagram")
+    if (!text) {
+        await conn.sendMessage(m.chat, {
+            text: `*🔍 Please provide an app name to search.*\n\n_Usage:_\n.${command} Instagram`
+        },{ quoted: m });
+        return; // Stop execution
+    }
 
-  execute: async (sock, m, args) => {
     try {
-      const jid = m.key.remoteJid
+        // React loading
+        await conn.sendMessage(m.chat, { react: { text: "⬇️", key: m.key } });
 
-      if (!args || args.length === 0) {
-        return sock.sendMessage(jid, {
-          text: `> ━ ╼╃ ⌬〔 ~𝐀𝐋𝐏𝐇𝐀 𝐗 𝐁𝐎𝐓~ 〕⌬ ╄╾ ━
+        const apiUrl = `http://ws75.aptoide.com/api/7/apps/search/query=${encodeURIComponent(text)}/limit=1`;
+        
+        const response = await axios.get(apiUrl);
+        const data = response.data;
 
-> 🎵 اكتب اسم الأغنية
-> مثال:
-> .اغنية despacito`
-        }, { quoted: m })
-      }
-
-      const query = args.join(' ').trim()
-
-      const tempDir = './temp'
-      if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true })
-
-      const audioPath = path.join(tempDir, `song_${Date.now()}.mp3`)
-
-      // 🎶 تفاعل
-      await sock.sendMessage(jid, {
-        react: { text: '🎶', key: m.key }
-      })
-
-      const cmd = `yt-dlp -x --audio-format mp3 "ytsearch1:${query}" -o "${audioPath}"`
-
-      exec(cmd, async (err) => {
-        if (err || !fs.existsSync(audioPath)) {
-          console.log("❌ Download error:", err?.message)
-
-          await sock.sendMessage(jid, {
-            react: { text: '❌', key: m.key }
-          })
-
-          return sock.sendMessage(jid, {
-            text: `> ━ ╼╃ ⌬〔 ~𝐀𝐋𝐏𝐇𝐀 𝐗 𝐁𝐎𝐓~ 〕⌬ ╄╾ ━
-
-> ❌ فشل تحميل:
-> 🎵 ${query}`
-          }, { quoted: m })
+        if (!data.datalist || !data.datalist.list || !data.datalist.list.length) {
+            await conn.sendMessage(m.chat, {
+                text: "❌ *No APK found for your query.*"
+            },{ quoted: m });
+            return; // Stop execution
         }
 
-        await sock.sendMessage(jid, {
-          react: { text: '✅', key: m.key }
-        })
+        const app = data.datalist.list[0];
+        const sizeMB = (app.size / (1024 * 1024)).toFixed(2);
 
-        const caption = `> ━ ╼╃ ⌬〔 ~𝐀𝐋𝐏𝐇𝐀 𝐗 𝐁𝐎𝐓~ 〕⌬ ╄╾ ━
+        const caption = `
+🎮 *App Name:* ${app.name}
+📦 *Package:* ${app.package}
+📅 *Last Updated:* ${app.updated}
+📁 *Size:* ${sizeMB} MB
+`.trim();
 
-> 🎶 تم تحميل الأغنية بنجاح
-> 📝 الاسم: ${query}
-> 📥 المصدر: YouTube
-> 🤖 البوت: ALPHA X`
+        // React upload
+        await conn.sendMessage(m.chat, { react: { text: "⬆️", key: m.key } });
 
-        try {
-          const audio = fs.readFileSync(audioPath)
+        // Send the document
+        await conn.sendMessage(m.chat, {
+            document: { url: app.file.path_alt },
+            fileName: `${app.name}.apk`,
+            mimetype: 'application/vnd.android.package-archive',
+            caption: caption,
+            contextInfo: {
+                externalAdReply: {
+                    title: app.name,
+                    body: "june md", // You can change this
+                    mediaType: 1,
+                    sourceUrl: app.file.path_alt,
+                    thumbnailUrl: app.icon,
+                    renderLargerThumbnail: true,
+                    showAdAttribution: false
+                }
+            } 
+        }, { quoted: m }); // 'quoted: m' is the third argument (options)
 
-          await sock.sendMessage(jid, {
-            audio: audio,
-            mimetype: 'audio/mpeg',
-            caption
-          }, { quoted: m })
-
-        } catch (sendErr) {
-          console.log("❌ Send error:", sendErr)
-
-          await sock.sendMessage(jid, {
-            text: `❌ حدث خطأ أثناء إرسال الأغنية`
-          }, { quoted: m })
-        }
-
-        // 🧹 حذف الملف
-        try {
-          if (fs.existsSync(audioPath)) fs.unlinkSync(audioPath)
-        } catch {}
-      })
+        // Final reaction
+        await conn.sendMessage(m.chat, { react: { text: "✅", key: m.key } });
 
     } catch (e) {
-      console.log("❌ Song Command Error:", e)
-
-      await sock.sendMessage(m.key.remoteJid, {
-        text: `> ━ ╼╃ ⌬〔 ~𝐀𝐋𝐏𝐇𝐀 𝐗 𝐁𝐎𝐓~ 〕⌬ ╄╾ ━
-
-> ⚠️ حدث خطأ غير متوقع`
-      }, { quoted: m })
+        console.error(e);
+        // Send error message to user
+        await conn.sendMessage(m.chat, { text: `An error occurred: ${e.message}` }, { quoted: m });
     }
-  }
 }
+
+// Handler Configuration
+handler.help = ['apk2'];
+handler.command = ['apk2'];
+handler.tags = ['downloader'];
+handler.limit = true;
+handler.args = true; // Requires arguments (the query)
+
+export default handler;

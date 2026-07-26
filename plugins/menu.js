@@ -334,7 +334,7 @@ const handler = async (m, { conn, usedPrefix: _p, command, isOwner, args }) => {
                 await conn.sendButton(
                         m.chat,
                         {
-                                image: { url: 'https://files.catbox.moe/s6tg4k.jpg' },
+                                image: { url: 'https://cdn.phototourl.com/free/2026-07-26-5c9de8b2-64fe-4890-b63c-2860da3cb81e.jpg' },
                                 caption: text.replace(
                                         new RegExp(`%(${Object.keys(replace).join('|')})`, 'g'),
                                         (_, key) => replace[key]
@@ -435,4 +435,4 @@ async function checkStatus() {
 
         global.db.data.stats.statusCache = { checkedAt: Date.now(), result: resultText }
         return resultText
-			}
+													}

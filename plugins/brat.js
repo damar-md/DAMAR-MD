@@ -23,7 +23,7 @@ let handler = async (m, { conn, text }) => {
 
     if (!query) {
       return m.reply(
-        `╭───(    Silana Bot    )───\n` +
+        `╭───(    DAMAR-MD    )───\n` +
         `├ 🇬🇧 You forgot to type something!\n` +
         `├ Give me a song name OR a YouTube link.\n` +
         `├ Example: .play funk universo\n` +

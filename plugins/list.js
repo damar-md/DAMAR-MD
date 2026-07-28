@@ -1,10 +1,10 @@
 let handler = async (m, { conn }) => {
-  let caption = `*سيلانا بوت* هو بوت واتساب ذكي متعدد المهام، يتيح تحميل الوسائط، إدارة المجموعات، البحث، الترجمة، ومعالجة الصور والفيديو. تم تطويره من قبل *نورالدين وافي*، هاوٍ للتقنية والتعديل على الأكواد، ويشارك أفكاره ومشاريعه عبر إنستغرام
+  let caption = `*دمار بوت* هو بوت واتساب ذكي متعدد المهام، يتيح تحميل الوسائط، إدارة المجموعات، البحث، الترجمة، ومعالجة الصور والفيديو. تم تطويره من قبل *ابو دمار شامل*، هاوٍ للتقنية والتعديل على الأكواد، ويشارك أفكاره ومشاريعه عبر فيسبوك 
 
-*Silana Bot* is a smart, multi-purpose WhatsApp bot that allows media downloading, group management, searching, translation, and image/video processing. It was created by *Noureddine Ouafy*, a tech enthusiast who enjoys modifying codes, and shares his ideas and projects on Instagram: 📸 instagram.com/noureddine_ouafy`
+*damar Bot* is a smart, multi-purpose WhatsApp bot that allows media downloading, group management, searching, translation, and image/video processing. It was created by *abo damar chamil*, a tech enthusiast who enjoys modifying codes, and shares his ideas and projects on Instagram: 📸 facebook`
   
   await conn.sendMessage(m.chat, {
-    image: { url: 'https://files.catbox.moe/hnbuh3.jpg' },
+    image: { url: 'https://cdn.zass.in/kdiCH3uwMX.jpeg' },
     gifPlayback: true,
     caption,
     footer: '`silana Ai - 2025`',

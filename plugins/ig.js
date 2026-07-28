@@ -129,8 +129,8 @@ let handler = async (m, { conn, args, command, usedPrefix }) => {
       await conn.sendMessage(
         m.chat,
         isVideo
-          ? { video: buffer, caption: "✅ Downloaded via Silana Bot" }
-          : { image: buffer, caption: "✅ Downloaded via Silana Bot" },
+          ? { video: buffer, caption: "*✅ تم التحميل عبر بوت DAMAR-MD*" }
+          : { image: buffer, caption: "*✅ تم التحميل عبر بوت DAMAR-MD*" },
         { quoted: m }
       );
       sentAny = true;

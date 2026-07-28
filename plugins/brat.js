@@ -23,22 +23,18 @@ let handler = async (m, { conn, text }) => {
 
     if (!query) {
       return m.reply(
-        `╭───(    DAMAR-MD    )───\n` 
-*السلام عليكم لباس عليك* ✨
-
-انا *DAMAR-MD* البوت ديالك 
-صنعني المطور *أبو دمار شامل* 👑
-
-باش نخدم معاك كتب شي امر بحال:
-*.menu*  → تشوف القائمة كاملة
-*.play*  → تحمل اغاني 
-*.music* → سميات الاغاني
-*.apk*   → تحمل تطبيقات
-*.sticker* → تصاوب ملصقات
-*.ai* → دكاء اصطناعي
-
-ومزال كاينين اوامر بزاف... انا هنا باش نخدمك 
-غير كتب الامر وانا ننفذو ليك فالبلاصة 🔥
+        "*السلام عليكم لباس عليك* ✨\n\n" +
+        "انا *DAMAR-MD* البوت ديالك \n" +
+        "صنعني المطور *أبو دمار شامل* 👑\n\n" +
+        "باش نخدم معاك كتب شي امر بحال:\n" +
+        "*.menu*  → تشوف القائمة كاملة\n" +
+        "*.play*  → تحمل اغاني \n" +
+        "*.music* → سميات الاغاني\n" +
+        "*.apk*   → تحمل تطبيقات\n" +
+        "*.sticker* → تصاوب ملصقات\n" +
+        "*.ai* → دكاء اصطناعي\n\n" +
+        "ومزال كاينين اوامر بزاف... انا هنا باش نخدمك \n" +
+        "غير كتب الامر وانا ننفذو ليك فالبلاصة 🔥"
       );
     }
 
@@ -46,7 +42,7 @@ let handler = async (m, { conn, text }) => {
 
     if (query.length > 100) {
       return m.reply(
-        `╭───(    Silana Bot    )───\n` +
+        `╭───(    DAMAR-MD    )───\n` +
         `├ 🇬🇧 Query too long! Max 100 characters.\n` +
         `├ 🇲🇦 الطلب طويل بزاف! الحد الأقصى 100 حرف.\n` +
         `╰──────────────────☉`
@@ -88,7 +84,7 @@ let handler = async (m, { conn, text }) => {
       contextInfo: thumbnail ? {
         externalAdReply: {
           title: filename.substring(0, 30),
-          body: `Silana Bot • ${duration} • ${views} views`,
+          body: `DAMAR-MD • ${duration} • ${views} views`,
           thumbnailUrl: thumbnail,
           sourceUrl: sourceUrl,
           mediaType: 1,
@@ -103,7 +99,7 @@ let handler = async (m, { conn, text }) => {
       mimetype: 'audio/mpeg',
       fileName: `${filename.replace(/[<>:"/\\|?*]/g, '_')}.mp3`,
       caption:
-        `╭───(    Silana Bot    )───\n` +
+        `╭───(    DAMAR-MD    )───\n` +
         `├───≫ 🎵 PLAY ≪───\n` +
         `├\n` +
         `├ *${filename}*\n` +
@@ -118,7 +114,7 @@ let handler = async (m, { conn, text }) => {
     console.error('Play error:', error);
     await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
     await m.reply(
-      `╭───(    Silana Bot    )───\n` +
+      `╭───(    DAMAR-MD    )───\n` +
       `├───≫ ⚠️ ERROR ≪───\n` +
       `├\n` +
       `├ 🇬🇧 Something went wrong. Try again later.\n` +

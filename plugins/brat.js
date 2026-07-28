@@ -23,15 +23,22 @@ let handler = async (m, { conn, text }) => {
 
     if (!query) {
       return m.reply(
-        `╭───(    DAMAR-MD    )───\n` +
-        `├ 🇬🇧 You forgot to type something!\n` +
-        `├ Give me a song name OR a YouTube link.\n` +
-        `├ Example: .play funk universo\n` +
-        `├─────────────────────\n` +
-        `├ 🇲🇦 نسيتي تكتب شي!\n` +
-        `├ عطيني اسم الأغنية أو رابط يوتيوب.\n` +
-        `├ مثال: .play صوت الحرية\n` +
-        `╰──────────────────☉`
+        `╭───(    DAMAR-MD    )───\n` 
+*السلام عليكم لباس عليك* ✨
+
+انا *DAMAR-MD* البوت ديالك 
+صنعني المطور *أبو دمار شامل* 👑
+
+باش نخدم معاك كتب شي امر بحال:
+*.menu*  → تشوف القائمة كاملة
+*.play*  → تحمل اغاني 
+*.music* → سميات الاغاني
+*.apk*   → تحمل تطبيقات
+*.sticker* → تصاوب ملصقات
+*.ai* → دكاء اصطناعي
+
+ومزال كاينين اوامر بزاف... انا هنا باش نخدمك 
+غير كتب الامر وانا ننفذو ليك فالبلاصة 🔥
       );
     }
 
@@ -52,7 +59,7 @@ let handler = async (m, { conn, text }) => {
     if (!data.status || !data.result?.download_url) {
       await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
       return m.reply(
-        `╭───(    Silana Bot    )───\n` +
+        `╭───(    DAMAR-MD    )───\n` +
         `├ 🇬🇧 No results found for: "${query}"\n` +
         `├ Try a different song name or link.\n` +
         `├─────────────────────\n` +

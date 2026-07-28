@@ -70,7 +70,8 @@ async function StalkIg(username) {
 }
 
 let handler = async (m, { conn, args }) => {
-  if (!args[0]) return m.reply('❗ Please provide an Instagram username.\nExample: .ig-profile noureddine_ouafy');
+  if (!args[0]) return m.reply(''*❗ المرجو إدخال اسم مستخدم انستغرام.*
+*متال:ig-profile. DAMAR-MD*);
 
   const res = await StalkIg(args[0].replace(/^@/, ''));
 

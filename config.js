@@ -11,10 +11,10 @@ global.AIRich = AIRich;
 global.pairingNumber = 212633226499;
 global.owner = [
   ['212633226499', 'DAMAR-MD', true],
-  ['', 'Owner 10', true],
+  ['', 'Owner 2', true],
 ];
 
-global.namebot = 'DAMAR-MD'; // بدلت الاسم هنا
+global.namebot = 'gaff ai';
 global.author = 'DAMAR-MD';
 global.source = 'https://www.facebook.com/profile.php?id=61591783185803';
 
@@ -31,16 +31,6 @@ global.stickpack = 'Created By';
 global.stickauth = namebot;
 
 global.multiplier = 38; // The higher, The harder levelup
-
-global.myImage = 'https://cdn.phototourl.com/free/2026-07-24-dc031ed8-61bf-4164-b177-9874847bab4f.jpg';
-
-/*============== WELCOME SETTINGS ==============*/
-global.welcome = true // فعل الترحيب
-global.welcomeImage = 'https://i.imgur.com/6bJk9qP.jpg' // تصويرة الترحيب
-global.devNumber = '+212 633-226499' // رقمك
-
-global.welcomeMessage = `*مرحبا بيك اخويا @user* 👋\n\n*فـ @subject*\n\nدير راسك فدارك 😄\n*البوت:* @botname\n*المطور:* @dev`
-global.leaveMessage = `*@user خرج من المجموعة* 😔\n\n*من:* @subject\nالله يسهل عليك اخويا\nرد البال على راسك`
 
 /*============== EMOJI ==============*/
 global.rpg = {
@@ -79,7 +69,7 @@ global.rpg = {
 			gold: '🪙',
 			emerald: '❇️',
 			upgrader: '🧰',
-	};
+		};
 		let results = Object.keys(emot)
 			.map((v) => [v, new RegExp(v, 'gi')])
 			.filter((v) => v[1].test(string));

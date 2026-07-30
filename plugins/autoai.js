@@ -12,6 +12,7 @@ const OWNER_NUMBERS = [
     '212702816550'
 ]
 
+// ====== 1. نظام Gemini ======
 const gemini = {
   getNewCookie: async function () {
     const r = await fetch("https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=maGuAc&source-path=%2F&bl=boq_assistant-bard-web-server_20250814.06_p1&f.sid=-7816331052118000090&hl=ar&_reqid=173780&rt=c", {
@@ -30,7 +31,7 @@ const gemini = {
     if (previousId) {
       try { const j = JSON.parse(atob(previousId)); resumeArray = j.newResumeArray; cookie = j.cookie; } catch { previousId = null; }
     }
-    const finalPrompt = `رد علي بالدارجة المغربية وباسلوب قصير وخفيف. ممنوع تطاكي الناس: ${prompt}`
+    const finalPrompt = `رد علي بالدارجة المغربية وباسلوب قصير وخفيف ومضحك شوية. ممنوع تطاكي الناس: ${prompt}`
     const headers = { "content-type": "application/x-www-form-urlencoded;charset=UTF-8", "cookie": cookie || await this.getNewCookie() };
     const b = [[finalPrompt], ["ar"], resumeArray];
     const a = [null, JSON.stringify(b)];
@@ -51,20 +52,48 @@ const gemini = {
   }
 };
 
+// ====== 2. دالة تحويل الصورة لرسوم مستقرة ======
+async function toCartoon(buffer) {
+    try {
+        const base64 = buffer.toString('base64');
+        const res = await fetch(`https://api.siputzx.my.id/api/ai/toon?image=data:image/jpeg;base64,${encodeURIComponent(base64)}`);
+        const json = await res.json();
+        if (json.status && json.data) return json.data;
+        throw new Error("API رجع خطأ")
+    } catch(e) {
+        console.log("خطأ تحويل الصورة:", e)
+        return null;
+    }
+}
+
+// دالة تحميل الصورة مع 3 محاولات
+async function downloadImage(conn, m) {
+    for(let i = 0; i < 3; i++) {
+        try {
+            const buffer = await conn.downloadMediaMessage(m, 'buffer');
+            if(buffer) return buffer;
+        } catch(e) {
+            console.log(`محاولة التحميل ${i+1} فشلت`)
+            await new Promise(r => setTimeout(r, 2000)); // تسنى 2 ثواني وعاود
+        }
+    }
+    return null;
+}
+
+// ====== 3. الهاندلر الرئيسي ======
 let handler = async (m, { conn, text, usedPrefix, command }) => {
   const senderNumber = m.sender.split('@')[0]
 
-  // تشييك: واش نتا من الملاك
   if (!OWNER_NUMBERS.includes(senderNumber)) return m.reply('❌ هاد الأمر غير للمالك')
 
-  if (!text) return m.reply(`*مثال:* ${usedPrefix + command} on/off\n*on* = شعل الذكاء الاصطناعي للكل\n*off* = طفيه على الكل`);
+  if (!text) return m.reply(`*📢 تحكم في الذكاء الاصطناعي:*\n${usedPrefix + command} on = تشعلو\n${usedPrefix + command} off = تطفيه`);
 
   if (text === "on") {
     global.autoGeminiGlobal = true;
-    m.reply("[ ✓ ] *تفعّل الذكاء الاصطناعي العام*\nدابا البوت غادي يجاوب على اي واحد فالكروبات والخاص بالدارجة 😎\n\n*الملاك الحاليين:*\n" + OWNER_NUMBERS.map(n => `+${n}`).join('\n'));
+    m.reply("[ ✓ ] *تفعّل الذكاء الاصطناعي*\n1. يجاوب على النصوص بالدارجة\n2. يحول اي صورة لرسوم كارتون تلقائيا 😎");
   } else if (text === "off") {
     global.autoGeminiGlobal = false;
-    m.reply("[ ✓ ] *تطفي الذكاء الاصطناعي العام*\nصافي البوت مبقاش غادي يجاوب تلقائيا");
+    m.reply("[ ✓ ] *تطفي الذكاء الاصطناعي*");
   } else {
     m.reply(`امر خاطئ. استعمل: on او off`)
   }
@@ -73,6 +102,32 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 handler.before = async (m, { conn }) => {
   if (!global.autoGeminiGlobal) return;
   if (m.isBaileys && m.fromMe) return;
+
+  // ===== حالة 1: إلا كانت صورة =====
+  if (m.message?.imageMessage) {
+    await conn.sendPresenceUpdate('recording', m.chat)
+    m.reply("⏳ *كنحولها لك لرسوم كارتون... صبر 10 ثواني* 🎨")
+
+    const buffer = await downloadImage(conn, m); // هنا التعديل المهم
+
+    if(!buffer) {
+        return m.reply("⚠️ ما قدرتش نحمل الصورة. عاود صيفطها وتكون أقل من 5MB")
+    }
+
+    const cartoonUrl = await toCartoon(buffer);
+
+    if (cartoonUrl) {
+        await conn.sendMessage(m.chat, {
+            image: { url: cartoonUrl },
+            caption: "*ها النتيجة ديالك* 😄"
+        }, { quoted: m });
+    } else {
+        await conn.sendMessage(m.chat, { text: "⚠️ سيرفر التحويل مشغول دابا. عاود من بعد 1 دقيقة" }, { quoted: m });
+    }
+    return;
+  }
+
+  // ===== حالة 2: إلا كان نص =====
   if (!m.text) return;
   if (/^[.#/\\!]/.test(m.text)) return;
 
@@ -84,12 +139,12 @@ handler.before = async (m, { conn }) => {
       const prev = geminiSessions[m.sender];
       const result = await gemini.ask(m.text, prev);
       geminiSessions[m.sender] = result.id;
-      await conn.sendMessage(m.chat, { text: result.text }, { quoted: m }); // بلا طاك
+      await conn.sendMessage(m.chat, { text: result.text }, { quoted: m });
       return;
     } catch (e) {
       attempts++;
       if (attempts >= 2) {
-        await conn.sendMessage(m.chat, { text: "⚠️ *خوادم Gemini ناعسة دابا* 😴 عاود من بعد" }, { quoted: m });
+        await conn.sendMessage(m.chat, { text: "⚠️ *خوادم Gemini ناعسة دابا* 😴" }, { quoted: m });
       } else {
         await new Promise(r => setTimeout(r, 1500));
       }

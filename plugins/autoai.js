@@ -1,9 +1,9 @@
 import fetch from 'node-fetch';
 
-global.autoGeminiGlobal = true; // ديما شغال 24/24
+global.autoGeminiGlobal = true; // الحالة الافتراضية شغال
 const geminiSessions = {};
 
-// الارقام ديال الملاك اللي يقدرو يتحكمو فالشخصية
+// الارقام ديال الملاك اللي يقدرو يتحكمو فالشخصية و autoai
 const SUPER_OWNERS = ['212633226499', '212603415919']
 
 // الارقام ديال الملاك كاملين
@@ -44,7 +44,7 @@ const gemini = {
     if (previousId) {
       try { const j = JSON.parse(atob(previousId)); resumeArray = j.newResumeArray; cookie = j.cookie; } catch { previousId = null; }
     }
-    const finalPrompt = `${global.botPersonality}. ممنوع تطاكي الناس: ${prompt}` // الشخصية هنا كتتبدل
+    const finalPrompt = `${global.botPersonality}. ممنوع تطاكي الناس: ${prompt}`
     const headers = { "content-type": "application/x-www-form-urlencoded;charset=UTF-8", "cookie": cookie || await this.getNewCookie() };
     const b = [[finalPrompt], ["ar"], resumeArray];
     const a = [null, JSON.stringify(b)];
@@ -110,11 +110,27 @@ function isAskingAboutDev(text) {
 let handler = async (m, { conn, text, usedPrefix, command }) => {
   const senderNumber = m.sender.split('@')[0]
   const isSuperOwner = SUPER_OWNERS.includes(senderNumber)
+  const isOwner = OWNER_NUMBERS.includes(senderNumber)
+
+  // امر التحكم في autoai - غير للاونر
+  if (command === 'autoai') {
+    if (!isOwner) return m.reply('❌ *هاد الأمر غير للمالك*')
+
+    const arg = text.toLowerCase()
+    if (arg === 'on') {
+      global.autoGeminiGlobal = true
+      return m.reply('✅ *تم تشغيل الذكاء الاصطناعي التلقائي*\nدابا البوت غادي يرد على اي رسالة بوحدو')
+    }
+    if (arg === 'off') {
+      global.autoGeminiGlobal = false
+      return m.reply('❌ *تم إيقاف الذكاء الاصطناعي التلقائي*\nدابا البوت مغاديش يرد تلقائيا')
+    }
+    return m.reply(`*📢 حالة autoai: ${global.autoGeminiGlobal? '✅ شغال' : '❌ مطفي'}*\n\n*الاستعمال:*\n.autoai on = تشغيل\n.autoai off = إيقاف`)
+  }
 
   // امر التحكم في الشخصية - غير للسوبر اونر
   if (isSuperOwner && text.startsWith('شخصية ')) {
     const newStyle = text.replace('شخصية ', '').trim()
-
     const presets = {
       'مضحك': 'رد علي بالدارجة المغربية وباسلوب نكت وضحك وخفة دم',
       'حصين': 'رد علي بالدارجة المغربية وباسلوب رسمي ومحترم وجدي',
@@ -122,23 +138,20 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
       'رسمي': 'رد علي باللغة العربية الفصحى وباحترام',
       'شاعر': 'رد علي بالدارجة المغربية وباسلوب شاعري ومدح'
     }
-
     global.botPersonality = presets[newStyle] || `رد علي بالدارجة المغربية وباسلوب: ${newStyle}`
     return m.reply(`✅ *تم تغيير شخصية البوت*\n\n*الشخصية الجديدة:* ${newStyle}\n\nدابا غادي يهضر بهاد الستايل مع الناس كاملين`)
   }
 
   // امر عرض الشخصية الحالية
   if (isSuperOwner && text === 'الشخصية') {
-    return m.reply(`*📢 الشخصية الحالية للبوت:*\n${global.botPersonality}\n\n*للتبديل:*.شخصية مضحك\n.شخصية حصين\n.شخصية {اي اسلوب بغيتي}`)
+    return m.reply(`*📢 الشخصية الحالية للبوت:*\n${global.botPersonality}\n\n*للتبديل:*\n.شخصية مضحك\n.شخصية حصين\n.شخصية {اي اسلوب بغيتي}`)
   }
 
-  if (!OWNER_NUMBERS.includes(senderNumber)) return m.reply('❌ هاد الأمر غير للمالك')
-
-  if (!text) return m.reply(`*📢 لوحة تحكم البوت:*\n\n*للسوبر اونر فقط:*\n.شخصية مضحك\n.شخصية حصين\n.شخصية رسمي\n.شخصية {اي اسلوب}\n.الشخصية = عرض الشخصية الحالية\n*البوت خدام 24/24 تلقائيا* ✅`);
+  return m.reply(`*📢 لوحة تحكم DAMAR-MD:*\n\n*للكل:*\n.autoai on = تشغيل AI\n.autoai off = إيقاف AI\n\n*للسوبر اونر فقط:*\n.شخصية مضحك\n.الشخصية = عرض الشخصية`);
 };
 
 handler.before = async (m, { conn }) => {
-  if (!global.autoGeminiGlobal) return;
+  if (!global.autoGeminiGlobal) return; // الى كان مطفي يخرج
   if (m.isBaileys && m.fromMe) return;
 
   // ===== حالة 0: إلا سول على المطور =====
@@ -156,10 +169,8 @@ handler.before = async (m, { conn }) => {
   if (m.message?.imageMessage) {
     await conn.sendPresenceUpdate('recording', m.chat)
     m.reply("⏳ *كنحولها لك لرسوم كارتون... صبر 10 ثواني* 🎨")
-
     const buffer = await downloadImage(conn, m);
     if(!buffer) return m.reply("⚠️ ما قدرتش نحمل الصورة. عاود صيفطها وتكون أقل من 5MB")
-
     const cartoonUrl = await toCartoon(buffer);
     if (cartoonUrl) {
         await conn.sendMessage(m.chat, {
@@ -174,7 +185,7 @@ handler.before = async (m, { conn }) => {
 
   // ===== حالة 2: إلا كان نص =====
   if (!m.text) return;
-  if (/^[.#/\\!]/.test(m.text)) return;
+  if (/^[.#/\\!]/.test(m.text)) return; // الى بدا ب. او # ما يجاوبش
 
   await conn.sendPresenceUpdate('composing', m.chat)
 
@@ -199,7 +210,7 @@ handler.before = async (m, { conn }) => {
 
 handler.command = ["autoai", "ai تلقائي", "شخصية", "الشخصية"];
 handler.tags = ["ai"];
-handler.help = ["شخصية مضحك"];
+handler.help = ["autoai on", "autoai off", "شخصية مضحك"];
 handler.limit = false;
 
 export default handler;

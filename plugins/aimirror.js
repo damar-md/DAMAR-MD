@@ -112,7 +112,7 @@ let handler = async (m, { conn }) => {
     const q = m.quoted ? m.quoted : m;
     const mime = (q.msg || q).mimetype || "";
     if (!mime || !mime.startsWith("image/")) {
-      return m.reply("📸 أرسل صورة مع الأمر:\n.aimirror");
+      return m.reply("📸😘 أرسل صورة مع الامر الأمر:\n.aimirror");
     }
 
     m.reply("⏳ المرجو الانتظار قليلا لا تنسى ان تتابع ابو دمار شامل https://www.facebook.com/profile.php?id=61591783185803");

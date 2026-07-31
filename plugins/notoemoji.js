@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 /**
- * Convert emoji to Unicode hex format
+ * تحويل الايموجي لصيغة يونيكود باش نجيبو من Noto
  */
 function toUnicode(input) {
     let pairs = []
@@ -18,39 +18,51 @@ function toUnicode(input) {
     return pairs.map(val => val.toString(16)).join('_')
 }
 
-let handler = async (m, { conn, text }) => {
-    try {
-        if (!text) {
-            return m.reply(`❌ Please enter an emoji.\n\nExample:\n.notoemoji 😅`)
-        }
+// كنعرفو واش هاد النص كلو اموجي ولا لا
+function isEmoji(str) {
+    const emojiRegex = /^\p{Extended_Pictographic}+(\u200d\p{Extended_Pictographic}+)*$/u
+    return emojiRegex.test(str.trim())
+}
 
-        const unicode = toUnicode(text.trim())
+let handler = async (m, { conn }) => {
+    try {
+        let text = m.text || m.msg?.text || ''
+        if (!text) return
+
+        text = text.trim()
+        
+        // الى كان غير اموجي واحد ولا بزاف ديال الاموجيات
+        if (!isEmoji(text)) return
+
+        const unicode = toUnicode(text)
         const url = `https://fonts.gstatic.com/s/e/notoemoji/latest/${unicode}/512.webp`
 
-        // Check if emoji exists
+        // كنتشيكي واش الاموجي موجود
         const check = await axios.head(url).catch(() => null)
-        if (!check) throw new Error("Emoji not supported or invalid.")
+        if (!check) return // الى ماكاينش كنخرجو بلا صداع
 
+        // كنصيفطو كستيكر اوتوماتيك
         await conn.sendFile(
             m.chat,
             url,
             `${unicode}.webp`,
-            `✅ *Noto Emoji Downloader*\n\n` +
-            `Emoji: ${text}\n` +
-            `Unicode: ${unicode}\n` +
-            `Source: Google Noto Emoji\n\n` +
-            `Powered by AgungDevX`,
-            m
+            null, // بلا كابشن
+            m,
+            { asSticker: true } // مهم باش يمشي ستيكر
         )
 
     } catch (err) {
-        m.reply(`❌ Error: ${err.message}`)
+        console.log('Emoji to Sticker Error:', err)
     }
 }
 
-handler.help = ['notoemoji']
-handler.command = ['notoemoji']
+// مسحنا الامر - دابا خدام اوتوماتيك
+handler.help = []
+handler.command = /.*/i // كيشوف كولشي الرسائل
 handler.tags = ['sticker']
 handler.limit = false
+handler.before = async (m, { conn }) => {
+    return handler(m, { conn })
+}
 
 export default handler
